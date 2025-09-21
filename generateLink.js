@@ -27,38 +27,61 @@ class AliExpressHelper {
         }
     }
 
-    async getProductData(id,lang) {
-        const url = `https://${lang || 'vi'}.aliexpress.com/item/${id}.html`;
+    // async getProductData(id,lang) {
+    //     const url = `https://${lang || 'vi'}.aliexpress.com/item/${id}.html`;
 
-        try {
-            const response = await axios.get(url, {
-                headers: {
-                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
-                    "Accept-Language": "en-US,en;q=0.9",
-                },
-                timeout: 10000,
-            });
+    //     try {
+    //         const response = await axios.get(url, {
+    //             headers: {
+    //                 "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
+    //                 "Accept-Language": "en-US,en;q=0.9",
+    //             },
+    //             timeout: 10000,
+    //         });
 
-            if (response.status !== 200) {
-                console.log(`❌ فشل في تحميل الصفحة: ${response.status}`);
-                return null;
-            }
+    //         if (response.status !== 200) {
+    //             console.log(`❌ فشل في تحميل الصفحة: ${response.status}`);
+    //             return null;
+    //         }
 
-            const $ = cheerio.load(response.data);
-            const imageUrl = $("meta[property='og:image']").attr("content");
-            const title = $("meta[property='og:title']").attr("content");
+    //         const $ = cheerio.load(response.data);
+    //         const imageUrl = $("meta[property='og:image']").attr("content");
+    //         const title = $("meta[property='og:title']").attr("content");
 
-            if (!title || !imageUrl) {
-                console.log("⚠️ لم يتم العثور على العنوان أو الصورة");
-                return null;
-            }
+    //         if (!title || !imageUrl) {
+    //             console.log("⚠️ لم يتم العثور على العنوان أو الصورة");
+    //             return null;
+    //         }
 
-            return { title, image_url: imageUrl };
-        } catch (err) {
-            console.error(`❌ خطأ أثناء جلب بيانات المنتج: ${err.message}`);
-            return null;
-        }
+    //         return { title, image_url: imageUrl };
+    //     } catch (err) {
+    //         console.error(`❌ خطأ أثناء جلب بيانات المنتج: ${err.message}`);
+    //         return null;
+    //     }
+    // }
+
+    async getProductData(productId) {
+    try {
+        const url = 'https://linkpreview.xyz/api/get-meta-tags';
+        const params = {
+            url: `https://vi.aliexpress.com/item/${productId}.html`
+        };
+
+        const response = await axios.get(url, { params });
+        const data = response.data;
+
+        return {
+            title: data.title || '',
+            image_url: data.image || null,
+
+        };
+
+    } catch (err) {
+        console.error("Error fetching preview:", err.message);
+        return null;
     }
+}
+
 }
 
 module.exports = AliExpressHelper;
