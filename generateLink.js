@@ -7,7 +7,7 @@ class AliExpressHelper {
         // رابط affiliate
     
    
-        const url = typeurl ? `https://portals.aliexpress.com/tools/linkGenerate/generatePromotionLink.htm?trackId=default&targetUrl=https://m.aliexpress.com/p/coin-index/index.html?_immersiveMode=true&from=syicon&productIds=${idProduct}&aff_fcid=`:`https://portals.aliexpress.com/tools/linkGenerate/generatePromotionLink.htm?trackId=default&targetUrl=https%3A%2F%2Fstar.aliexpress.com%2Fshare%2Fshare.htm%3FredirectUrl%3Dhttps%253A%252F%252Fvi.aliexpress.com%252Fi%252F${idProduct}.html%253FsourceType%253D620%2526channel%253Dcoin&afSmartRedirect=y`;
+        const url = typeurl ? `https://portals.aliexpress.com/tools/linkGenerate/generatePromotionLink.htm?trackId=default&targetUrl=https://m.aliexpress.com/p/coin-index/index.html?_immersiveMode=true&from=syicon&productIds=${idProduct}&tracking=true&aff_fcid=`:`https://portals.aliexpress.com/tools/linkGenerate/generatePromotionLink.htm?trackId=default&targetUrl=https%3A%2F%2Fstar.aliexpress.com%2Fshare%2Fshare.htm%3FredirectUrl%3Dhttps%253A%252F%252Fvi.aliexpress.com%252Fi%252F${idProduct}.html%253FsourceType%253D620%2526channel%253Dcoin&afSmartRedirect=y`;
 
         try {
             const response = await axios.get(url, {
