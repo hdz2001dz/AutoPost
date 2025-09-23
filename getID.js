@@ -18,7 +18,10 @@ async function getFirstRedirect(shortUrl) {
 
 // 🔹 المحاولة الثانية: Playwright يجيب URL النهائي
 async function trackShortUrlPlaywright(shortUrl) {
-    const browser = await chromium.launch({ headless: true });
+    const browser = await chromium.launch({
+        headless: true,
+        args: ["--no-sandbox", "--disable-setuid-sandbox"]
+    });
     const page = await browser.newPage();
     try {
         await page.goto(shortUrl, { waitUntil: "domcontentloaded", timeout: 15000 });
@@ -113,3 +116,4 @@ async function idCatcher(urlOrId) {
     return null;
 }
 module.exports = idCatcher;
+
