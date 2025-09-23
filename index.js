@@ -33,19 +33,19 @@ function keepAppRunning() {
     users.map(user => listchannels.push(user.name));
 
 
-    const apiId = process.env.idapp;
-    const apiHash =   process.env.hashapp;
+    const apiId = 22280754 // process.env.idapp;
+    const apiHash = "d33ca4575a7b1be324893c28c47b7280" //  process.env.hashapp;
 
     const SESSION_FILE = "session.txt";
 
-    // let stringSession = new StringSession(
-    //     fs.existsSync(SESSION_FILE) ? fs.readFileSync(SESSION_FILE, "utf-8") : ""
-    // );
-
     let stringSession = new StringSession(
-       
-        process.env.stringSession
+        fs.existsSync(SESSION_FILE) ? fs.readFileSync(SESSION_FILE, "utf-8") : ""
     );
+
+    // let stringSession = new StringSession(
+       
+    //     process.env.stringSession
+    // );
 
     const client = new TelegramClient(stringSession, apiId, apiHash, {
         connectionRetries: 5,
@@ -141,20 +141,20 @@ function keepAppRunning() {
                         if (!Array.isArray(list_products)) {
                             list_products = [];
                         }
-                        if (list_products.includes(getID.url)) {
-                            console.log('id found')
+                        if (list_products.includes(getID.id)) {
+                            console.log(`id found ==> ${getID.id}`)
                         } else {
                    
-                            list_products.push(getID.url);
+                            list_products.push(getID.id);
                             await products.updateUser(10, { idProduct: list_products });
                        
                  
-                            const ProductData = await gener.getProductData(getID.url);
-                            console.log(getID.type)
+                            const ProductData = await gener.getProductData(getID.id);
+                            console.log(getID.meta.type)
                         const generate = await gener.generateLink(
                             process.env.cook,
-                            getID.url,
-                            getID.type
+                            getID.id,
+                            getID.meta.type
                         );
 
                         const messa = `
