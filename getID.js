@@ -1,3 +1,4 @@
+
 const { chromium } = require("playwright");
 const axios = require("axios");
 
@@ -20,8 +21,8 @@ async function trackShortUrlPlaywright(shortUrl) {
     const browser = await chromium.launch({ headless: true });
     const page = await browser.newPage();
     try {
-        await page.goto(shortUrl, { waitUntil: "commit", timeout: 15000 });
-        await page.waitForTimeout(2000);
+        await page.goto(shortUrl, { waitUntil: "domcontentloaded", timeout: 15000 });
+        await page.waitForTimeout(3000);
         const finalUrl = page.url();
         return { url: finalUrl, type: checkUrl(finalUrl) };
     } catch (e) {
