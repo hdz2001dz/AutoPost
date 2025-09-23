@@ -33,19 +33,19 @@ function keepAppRunning() {
     users.map(user => listchannels.push(user.name));
 
 
-    const apiId = 22280754 // process.env.idapp;
-    const apiHash = "d33ca4575a7b1be324893c28c47b7280" //  process.env.hashapp;
+    const apiId =  process.env.idapp;
+    const apiHash =  process.env.hashapp;
 
     const SESSION_FILE = "session.txt";
 
-    let stringSession = new StringSession(
-        fs.existsSync(SESSION_FILE) ? fs.readFileSync(SESSION_FILE, "utf-8") : ""
-    );
-
     // let stringSession = new StringSession(
-       
-    //     process.env.stringSession
+    //     fs.existsSync(SESSION_FILE) ? fs.readFileSync(SESSION_FILE, "utf-8") : ""
     // );
+
+    let stringSession = new StringSession(
+       
+        process.env.stringSession
+    );
 
     const client = new TelegramClient(stringSession, apiId, apiHash, {
         connectionRetries: 5,
