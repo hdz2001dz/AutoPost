@@ -1,4 +1,4 @@
-const { chromium } = require("playwright");
+const { chromium } = require("playwright-core");
 const axios = require("axios");
 
 // 🔹 المحاولة الأولى: axios يجيب أول redirect فقط
@@ -115,3 +115,4 @@ async function idCatcher(urlOrId) {
     return null;
 }
 module.exports = idCatcher;
+
