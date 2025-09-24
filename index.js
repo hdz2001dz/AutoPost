@@ -1,4 +1,3 @@
-
 const { TelegramClient } = require("telegram");
 const { StringSession } = require("telegram/sessions");
 const fs = require("fs");
@@ -7,202 +6,168 @@ const idCatcher = require("./getID");
 const AliExpressHelper = require("./generateLink");
 const extractPriceAndLink = require("./getMessage");
 const readlineSync = require("readline-sync");
-const channels = database("channel");
-const products = database("products");
-const { Telegraf } = require('telegraf')
-const express = require('express');
-const https = require('https');
+const { Telegraf } = require("telegraf");
+const express = require("express");
+const https = require("https");
+
+// =======================
+// إعدادات عامة
+// =======================
 const app = express();
 const port = 3000;
-const bot = new Telegraf(process.env.token)
-let listchannels = [];
+const bot = new Telegraf(process.env.token);
+
+const apiId = process.env.idapp;
+const apiHash = process.env.hashapp;
+const SESSION_FILE = "session.txt";
+const stringSession = new StringSession(process.env.stringSession);
+
+const channels = database("channel");
+const products = database("products");
+
+let channelList = [];
+
+// =======================
+// Helpers
+// =======================
+
+function removeLeadingNumber(str) {
+    return str.replace(/^\d+\s*/, ""); // يشيل الأرقام والمسافة في البداية
+}
+
+function formatChannelName(name) {
+    const clean = removeLeadingNumber(name);
+    return clean.startsWith("@") ? clean : "@" + clean;
+}
+
+async function getLastPost(client, channel) {
+    const result = await client.getMessages(channel, { limit: 1 });
+    return result?.[0]?.message || "[لا يوجد نص]";
+}
+
+function savePost(channel, postText) {
+    const cleanName = channel.replace("@", "");
+    return channels.updateUserByName(cleanName, { text: postText })
+        .then(() => console.log(`✅ آخر بوست محفوظ (${cleanName})`))
+        .catch(err => console.error("⚠️ خطأ في الحفظ:", err.message));
+}
+
+async function readLastSaved(channel) {
+    const cleanName = channel.replace("@", "");
+    const msg = await channels.userDbByName(cleanName);
+    return msg?.text || "";
+}
+
 function keepAppRunning() {
     setInterval(() => {
         https.get(`${process.env.RENDER_EXTERNAL_URL}/ping`, (resp) => {
             if (resp.statusCode === 200) {
-                console.log('Ping successful');
+                console.log("Ping successful");
             } else {
-                console.error('Ping failed');
+                console.error("Ping failed");
             }
         });
     }, 5 * 60 * 1000);
 }
-(async () => {
 
-    const users = await channels.usersDb();
+// =======================
+// Monitor Channels
+// =======================
+
+async function monitorChannels(client) {
+    await client.start({
+        phoneNumber: () => readlineSync.question("📱 رقم الهاتف: "),
+        password: () => readlineSync.question("🔑 كلمة المرور (2FA): "),
+        phoneCode: () => readlineSync.question("📩 رمز OTP: "),
+        onError: (err) => console.error("❌ خطأ:", err.message),
+    });
+
+    // حفظ السيشن
+    fs.writeFileSync(SESSION_FILE, client.session.save(), "utf-8");
+    console.log("✅ تم حفظ الجلسة");
+
+    const aliHelper = new AliExpressHelper();
     const prod = await products.userDb(10);
-    users.map(user => listchannels.push(user.name));
 
+    while (true) {
+        for (const channel of channelList) {
+            try {
+                const latestPost = await getLastPost(client, channel);
+                const lastSaved = await readLastSaved(channel);
 
-    const apiId =  process.env.idapp;
-    const apiHash =  process.env.hashapp;
+                if (latestPost !== lastSaved) {
+                    const postInfo = await extractPriceAndLink(latestPost);
+                    const getID = await idCatcher(postInfo.link);
 
-    const SESSION_FILE = "session.txt";
+                    let productList = Array.isArray(prod.idProduct) ? prod.idProduct : [];
+                    if (productList.includes(getID.id)) {
+                        console.log(`⚠️ المنتج موجود بالفعل (id=${getID.id})`);
+                        continue;
+                    }
 
-    // let stringSession = new StringSession(
-    //     fs.existsSync(SESSION_FILE) ? fs.readFileSync(SESSION_FILE, "utf-8") : ""
-    // );
+                    // تحديث قاعدة البيانات
+                    productList.push(getID.id);
+                    await products.updateUser(10, { idProduct: productList });
 
-    let stringSession = new StringSession(
-       
-        process.env.stringSession
-    );
+                    // جلب بيانات المنتج
+                    const productData = await aliHelper.getProductData(getID.id);
+                    const generate = await aliHelper.generateLink(
+                        process.env.cook,
+                        getID.id,
+                        getID.meta.type
+                    );
+
+                    const message = `
+🔥 تخفيض⚡️
+
+☑️ المنتج :
+${productData.title}
+
+✅ السعر : ${postInfo.price}
+${generate}
+
+☑️ قناتنا : @Choice_Deals
+✅ البوت : @Alishoppingdz20_bot
+                    `;
+
+                    if (productData.image_url?.startsWith("http")) {
+                        await bot.telegram.sendPhoto(
+                            "@err0rchannel1",
+                            { url: productData.image_url },
+                            { caption: message }
+                        );
+                    }
+
+                    await savePost(channel, latestPost);
+                } else {
+                    console.log(`⏳ لا جديد في: ${channel}`);
+                }
+            } catch (err) {
+                console.error(`❌ خطأ في ${channel}:`, err.message);
+            }
+        }
+
+        await new Promise(resolve => setTimeout(resolve, 20000));
+    }
+}
+
+// =======================
+// Main
+// =======================
+
+(async () => {
+    const users = await channels.usersDb();
+    channelList = users.map(u => formatChannelName(u.name));
 
     const client = new TelegramClient(stringSession, apiId, apiHash, {
         connectionRetries: 5,
     });
 
-    function removeLeadingNumber(str) {
-        let i = 0;
-        while (i < str.length && !isNaN(str[i]) && str[i] !== " ") {
-            i++;
-        }
-        return str.slice(i);
-    }
-
-    const channelUsernames = listchannels.map(ch => {
-        const cleanName = removeLeadingNumber(ch);
-        return cleanName.startsWith("@") ? cleanName : "@" + cleanName;
-    });
-
-    // -------------
-
-    async function getLastPost(channel) {
-        const result = await client.getMessages(channel, { limit: 1 });
-        if (result && result.length > 0) {
-            return result[0].message || "[لا يوجد نص]";
-        }
-        return "[لا يوجد نص]";
-    }
-
-    function getLeadingNumber(str) {
-        const match = str.match(/^(\d+)/);
-        return match ? parseInt(match[1], 10) : null;
-    }
-
-    function savePost(channel, postText) {
-        const getid = channel.replace("@", "");// getLeadingNumber(channel);
-        // console.log(`=============>${postText}`)
-
-        // if (getid) {
-        //     // عندها رقم معرف
-        //     channels.updateUser(getid, { text: postText })
-        //         .then(() => console.log(`✅ تم تحديث آخر بوست في الداتا بيس (id=${getid})`))
-        //         .catch(err => console.error("⚠️ خطأ في الحفظ:", err.message));
-        // } else {
-        //     // ماعندهاش رقم → نستعمل الاسم بلا @
-            const cleanName = channel.replace("@", "");
-            channels.updateUserByName(cleanName, { text: postText })
-                .then(() => console.log(`✅ تم تحديث آخر بوست بالاسم (${cleanName})`))
-                .catch(err => console.error("⚠️ خطأ في الحفظ بالاسم:", err.message));
-        // }
-    }
-
-    async function readLastSaved(channel) {
-        const getid = getLeadingNumber(channel);
-
-        if (getid) {
-            const msg = await channels.userDb(getid);
-            return msg && msg["text"] ? msg["text"] : "";
-        } else {
-            const cleanName = channel.replace("@", "");
-            const msg = await channels.userDbByName(cleanName);
-            return msg && msg["text"] ? msg["text"] : "";
-        }
-    }
-
-
-    // -----------------
-
-    async function monitorChannels() {
-        await client.start({
-            phoneNumber: async () => readlineSync.question("📱 NumberPhone: "),
-            password: async () => readlineSync.question("🔑 Password (2FA): "),
-            phoneCode: async () => readlineSync.question("📩 OTP: "),
-            onError: (err) => console.log(err),
-        });
-
-        // بعد تسجيل الدخول نخزن السيشن
-        fs.writeFileSync(SESSION_FILE, client.session.save(), "utf-8");
-        console.log("✅ تم حفظ الجلسة في الملف");
-
-        while (true) {
-            for (const channel of channelUsernames) {
-                try {
-                
-                    const latestPost = await getLastPost(channel);
-                    const lastSaved = await readLastSaved(channel);
-
-                    if (latestPost !== lastSaved) {
-                        const getinfolastpost = await extractPriceAndLink(latestPost);
-                        const gener = new AliExpressHelper();
-                        const getID = await idCatcher(getinfolastpost.link);
-                        
-                        let list_products = prod.idProduct
-                        if (!Array.isArray(list_products)) {
-                            list_products = [];
-                        }
-                        if (list_products.includes(getID.id)) {
-                            console.log(`id found ==> ${getID.id}`)
-                        } else {
-                   
-                            list_products.push(getID.id);
-                            await products.updateUser(10, { idProduct: list_products });
-                       
-                 
-                            const ProductData = await gener.getProductData(getID.id);
-                            console.log(getID.meta.type)
-                        const generate = await gener.generateLink(
-                            process.env.cook,
-                            getID.id,
-                            getID.meta.type
-                        );
-
-                        const messa = `
-🔥 تخفيض⚡️
-
-☑️ المنتج :
-${ProductData.title}
-
-✅ رابط العملات : ${getinfolastpost.price}
-${generate}
-
-☑️ قناتنا : @Choice_Deals
-✅ البوت :  @Alishoppingdz20_bot
-                        `;
-
-                        const imageUrl = ProductData.image_url;
-                        console.log(imageUrl)
-                        
-                        if (imageUrl && imageUrl.startsWith("http")) {
-                            bot.telegram.sendPhoto("@err0rchannel1"
-                                , { url: imageUrl }, { caption: messa })
-
-                        }
-
-                            savePost(channel, latestPost);
-                        }
-                    } else {
-                        console.log(`⏳ لا يوجد جديد في القناة: ${channel}`);
-                    }
-                } catch (err) {
-                    console.log(`❌ خطأ في ${channel}: ${err.message}`);
-                }
-            }
-            await new Promise((resolve) => setTimeout(resolve, 20000));
-        }
-    }
-
-    app.get('/ok', (req, res) => {
-        res.send('Hello World!');
-    });
-
-
+    app.get("/ok", (req, res) => res.send("Hello World!"));
 
     app.listen(port, () => {
-        console.log(`Example app listening on port ${port}`);
-        monitorChannels();
-        keepAppRunning()
+        console.log(`🚀 السيرفر يعمل على المنفذ ${port}`);
+        monitorChannels(client);
+        keepAppRunning();
     });
 })();
-
