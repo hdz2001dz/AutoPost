@@ -84,5 +84,6 @@ class AliExpressHelper {
 
 }
 
-// module.exports = AliExpressHelper;
+module.exports = AliExpressHelper;
+
 
