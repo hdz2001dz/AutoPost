@@ -4,6 +4,7 @@ const cheerio = require("cheerio");
 class AliExpressHelper {
  
     async generateLink(cook ,idProduct, typeurl,trackID = "default") {
+     console.log(`${idProduct} ===> ${typeurl})
         // رابط affiliate
     
         const url = typeurl == 'bundle' ? `https://portals.aliexpress.com/tools/linkGenerate/generatePromotionLinkV2.htm?shipTos=DZ&trackId=default&targetUrl=https:%2F%2Fwww.aliexpress.com%2Fssr%2F300000512%2FBundleDeals2%3FdisableNav%3DYES%26pha_manifest%3Dssr%26_immersiveMode%3Dtrue%26productIds%3D${idProduct}%26aff_fcid%3D` : typeurl == 'syicon' ? `https://portals.aliexpress.com/tools/linkGenerate/generatePromotionLinkV2.htm?shipTos=DZ&trackId=default&targetUrl=https:%2F%2Fm.aliexpress.com%2Fp%2Fcoin-index%2Findex.html%3F_immersiveMode%3Dtrue%26from%3Dsyicon%26productIds%3D${idProduct}%26tracking%3Dtrue%26aff_fcid%3D` : `https://portals.aliexpress.com/tools/linkGenerate/generatePromotionLink.htm?trackId=default&targetUrl=https%3A%2F%2Fstar.aliexpress.com%2Fshare%2Fshare.htm%3FredirectUrl%3Dhttps%253A%252F%252Fvi.aliexpress.com%252Fi%252F${idProduct}.html%253FsourceType%253D620%2526channel%253Dcoin&afSmartRedirect=y`
@@ -85,4 +86,5 @@ class AliExpressHelper {
 }
 
 module.exports = AliExpressHelper;
+
 
