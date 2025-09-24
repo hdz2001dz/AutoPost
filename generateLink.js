@@ -85,12 +85,4 @@ class AliExpressHelper {
 }
 
 // module.exports = AliExpressHelper;
-(async () => {
-    const helper = new AliExpressHelper();
-    const generate = await helper.generateLink(
-        'CW1X1l9bOxGIBhY72Pd5Y/3ySTFTrjn7m58OAwgERxQj6gFYWJh3f3G3zhsTA32v6PcisjohAPnFAKIbL12A6D1J2fbgu+wvUXz49YJzURtEQPH72UIu94IcgJukvUHPc50O4aYwKe06yuzg2JoEKIQ2hhCLpXsJ/qcyb/rIwl78L5UX3Netfxla74LYexXFOeDbZsnFE1jbPqoDRm0+kqnvKphC5noGLgUQd2U1nMAm6wmhDqjV5CGUpwhpseNRDssyMynVsCRSKwlBNruinFerEdKnlE2ozIQOBI3DRfh4EQHQXetjlG3BYRlROVC+xh7D95X8qnNpmAWeZvLamuc3DwVRIB+lCd6ZjwWTCww66CcARVoNTVaTBzUKGNkbNapHJgimKp1g4kpgmmZAcBYhRSo9YAsaGUfCLSKv1wlunuvNS0+qHzW9RTiGeXnFrfut9K0d2I3r2ALLKppwlk/JOAebDFNbjkI350HkOfHxNmfOTYWRaYC9fIrN7PHEuP/fCXkJKiGIMXT/CNYXPQlHlK946Q6BodULaUYaGBNy2QCnhv+A27z2It1s9gzlFV10e1Xn79QI8xAK2Qi7sJphONV8pBqFyIhxEtY2mSBMC5cJkAZwz/z5/Cz/h16yN7qrXQ6q2hAlJ0tVdrv8Ur+RO1H/5xdDXbvlirmYCWiLICtOk6PQcp4bkll4KYT7F2DUXzaoZQM=',
-        '1005008971710407',
-        'syicon'
-    );
-    console.log(generate);
-})();
+
