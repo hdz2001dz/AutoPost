@@ -2,13 +2,12 @@ const axios = require("axios");
 const cheerio = require("cheerio");
 
 class AliExpressHelper {
- 
-    async generateLink(cook ,idProduct, typeurl,trackID = "default") {
-     console.log(`${idProduct} ===> ${typeurl}`)
+
+    async generateLink(cook, idProduct, typeurl, trackID = "default") {
         // رابط affiliate
-    
-        const url = `https://portals.aliexpress.com/tools/linkGenerate/generatePromotionLinkV2.htm?shipTos=DZ&trackId=default&targetUrl=https:%2F%2Fm.aliexpress.com%2Fp%2Fcoin-index%2Findex.html%3F_immersiveMode%3Dtrue%26from%3Dsyicon%26productIds%3D${idProduct}%26tracking%3Dtrue%26aff_fcid%3D`  //typeurl  == 'bundle' ? `https://portals.aliexpress.com/tools/linkGenerate/generatePromotionLinkV2.htm?shipTos=DZ&trackId=default&targetUrl=https:%2F%2Fwww.aliexpress.com%2Fssr%2F300000512%2FBundleDeals2%3FdisableNav%3DYES%26pha_manifest%3Dssr%26_immersiveMode%3Dtrue%26productIds%3D${idProduct}%26aff_fcid%3D` : typeurl == 'syicon' ? `https://portals.aliexpress.com/tools/linkGenerate/generatePromotionLinkV2.htm?shipTos=DZ&trackId=default&targetUrl=https:%2F%2Fm.aliexpress.com%2Fp%2Fcoin-index%2Findex.html%3F_immersiveMode%3Dtrue%26from%3Dsyicon%26productIds%3D${idProduct}%26tracking%3Dtrue%26aff_fcid%3D` : `https://portals.aliexpress.com/tools/linkGenerate/generatePromotionLink.htm?trackId=default&targetUrl=https%3A%2F%2Fstar.aliexpress.com%2Fshare%2Fshare.htm%3FredirectUrl%3Dhttps%253A%252F%252Fvi.aliexpress.com%252Fi%252F${idProduct}.html%253FsourceType%253D620%2526channel%253Dcoin&afSmartRedirect=y`
-        
+
+        const url = typeurl == 'bundle' ? `https://portals.aliexpress.com/tools/linkGenerate/generatePromotionLinkV2.htm?shipTos=DZ&trackId=default&targetUrl=https:%2F%2Fwww.aliexpress.com%2Fssr%2F300000512%2FBundleDeals2%3FdisableNav%3DYES%26pha_manifest%3Dssr%26_immersiveMode%3Dtrue%26productIds%3D${idProduct}%26aff_fcid%3D` : typeurl == 'syicon' ? `https://portals.aliexpress.com/tools/linkGenerate/generatePromotionLinkV2.htm?shipTos=DZ&trackId=default&targetUrl=https:%2F%2Fm.aliexpress.com%2Fp%2Fcoin-index%2Findex.html%3F_immersiveMode%3Dtrue%26from%3Dsyicon%26productIds%3D${idProduct}%26tracking%3Dtrue%26aff_fcid%3D` : `https://portals.aliexpress.com/tools/linkGenerate/generatePromotionLink.htm?trackId=default&targetUrl=https%3A%2F%2Fstar.aliexpress.com%2Fshare%2Fshare.htm%3FredirectUrl%3Dhttps%253A%252F%252Fvi.aliexpress.com%252Fi%252F${idProduct}.html%253FsourceType%253D620%2526channel%253Dcoin&afSmartRedirect=y`
+
 
         try {
             const response = await axios.get(url, {
@@ -19,7 +18,7 @@ class AliExpressHelper {
             });
 
             if (response.status === 200 && response.data) {
-                return response.data.data;
+                return response.data.data.shortLink;
             }
             return null;
         } catch (err) {
@@ -62,31 +61,36 @@ class AliExpressHelper {
     // }
 
     async getProductData(productId) {
-    try {
-        const url = 'https://linkpreview.xyz/api/get-meta-tags';
-        const params = {
-            url: `https://vi.aliexpress.com/item/${productId}.html`
-        };
+        try {
+            const url = 'https://linkpreview.xyz/api/get-meta-tags';
+            const params = {
+                url: `https://vi.aliexpress.com/item/${productId}.html`
+            };
 
-        const response = await axios.get(url, { params });
-        const data = response.data;
+            const response = await axios.get(url, { params });
+            const data = response.data;
 
-        return {
-            title: data.title || '',
-            image_url: data.image || null,
+            return {
+                title: data.title || '',
+                image_url: data.image || null,
 
-        };
+            };
 
-    } catch (err) {
-        console.error("Error fetching preview:", err.message);
-        return null;
+        } catch (err) {
+            console.error("Error fetching preview:", err.message);
+            return null;
+        }
     }
-}
 
 }
 
-module.exports = AliExpressHelper;
-
-
-
-
+// module.exports = AliExpressHelper;
+(async () => {
+    const helper = new AliExpressHelper();
+    const generate = await helper.generateLink(
+        'CW1X1l9bOxGIBhY72Pd5Y/3ySTFTrjn7m58OAwgERxQj6gFYWJh3f3G3zhsTA32v6PcisjohAPnFAKIbL12A6D1J2fbgu+wvUXz49YJzURtEQPH72UIu94IcgJukvUHPc50O4aYwKe06yuzg2JoEKIQ2hhCLpXsJ/qcyb/rIwl78L5UX3Netfxla74LYexXFOeDbZsnFE1jbPqoDRm0+kqnvKphC5noGLgUQd2U1nMAm6wmhDqjV5CGUpwhpseNRDssyMynVsCRSKwlBNruinFerEdKnlE2ozIQOBI3DRfh4EQHQXetjlG3BYRlROVC+xh7D95X8qnNpmAWeZvLamuc3DwVRIB+lCd6ZjwWTCww66CcARVoNTVaTBzUKGNkbNapHJgimKp1g4kpgmmZAcBYhRSo9YAsaGUfCLSKv1wlunuvNS0+qHzW9RTiGeXnFrfut9K0d2I3r2ALLKppwlk/JOAebDFNbjkI350HkOfHxNmfOTYWRaYC9fIrN7PHEuP/fCXkJKiGIMXT/CNYXPQlHlK946Q6BodULaUYaGBNy2QCnhv+A27z2It1s9gzlFV10e1Xn79QI8xAK2Qi7sJphONV8pBqFyIhxEtY2mSBMC5cJkAZwz/z5/Cz/h16yN7qrXQ6q2hAlJ0tVdrv8Ur+RO1H/5xdDXbvlirmYCWiLICtOk6PQcp4bkll4KYT7F2DUXzaoZQM=',
+        '1005008971710407',
+        'syicon'
+    );
+    console.log(generate);
+})();
