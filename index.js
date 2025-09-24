@@ -116,6 +116,7 @@ async function monitorChannels(client) {
                         getID.id,
                         getID.meta.type
                     );
+                    console.log(`generate ===>${generate}`) 
 
                     const message = `
 🔥 تخفيض⚡️
@@ -171,3 +172,4 @@ ${generate}
         keepAppRunning();
     });
 })();
+
