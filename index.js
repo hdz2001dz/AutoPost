@@ -96,7 +96,7 @@ async function monitorChannels(client) {
                 const lastSaved = await readLastSaved(channel);
 
                 if (latestPost !== lastSaved) {
-                    const postInfo = await extractPriceAndLink(latestPost);
+                    const postInfo = extractPriceAndLink(latestPost);
                     const getID = await idCatcher(postInfo.link);
 
                     let productList = Array.isArray(prod.idProduct) ? prod.idProduct : [];
@@ -172,4 +172,5 @@ ${generate}
         keepAppRunning();
     });
 })();
+
 
